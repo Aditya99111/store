@@ -1,25 +1,25 @@
-import logo from './logo.svg';
-import './App.css';
-
-function App() {
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import WareHouse from './Screens/Warehouse/WareHouse';
+import StoreFront from './Screens/StoreFront/StoreFront';
+import ShowInvoice from './Screens/StoreFront/ShowInvoice';
+import CustomerInvoices from './Screens/StoreFront/CustomerInvoices';
+import "./App.css"
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className='app'>
+             <Routes>
+          <Route path="/warehouse" element={<WareHouse />} />
+          <Route path="/storefront" element={<StoreFront />} />
+          <Route path="/invoice/:invoiceId" element={<ShowInvoice />} />
+          <Route path="/customer/:customerId" element={<CustomerInvoices />} />
+
+
+        </Routes>
+      </div>
+    </Router>
   );
-}
+};
 
 export default App;
