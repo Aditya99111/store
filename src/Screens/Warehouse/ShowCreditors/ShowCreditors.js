@@ -1,4 +1,3 @@
-// src/ShowCreditors.js
 import React, { useState, useEffect } from "react";
 import { db, collection, getDocs, doc, deleteDoc } from "../../../firebase";
 
@@ -25,7 +24,12 @@ const ShowCreditors = () => {
   const sortCreditors = (creditorsData, option) => {
     switch (option) {
       case "name":
-        creditorsData.sort((a, b) => a.name.localeCompare(b.name));
+        creditorsData.sort((a, b) => {
+          if (a.name && b.name) {
+            return a.name.localeCompare(b.name);
+          }
+          return 0;
+        });
         break;
       case "amount":
         creditorsData.sort((a, b) => b.totalAmount - a.totalAmount);
@@ -44,11 +48,11 @@ const ShowCreditors = () => {
   };
 
   const filteredCreditors = creditors.filter(creditor =>
-    creditor.name.toLowerCase().includes(searchTerm.toLowerCase())
+    creditor.name && creditor.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div>
+    <div className="center">
       <h1>All Creditors</h1>
       <div>
         <label>Sort by:</label>
@@ -57,21 +61,23 @@ const ShowCreditors = () => {
           <option value="amount">Total Amount</option>
         </select>
       </div>
+      <br />
       <input
         type="text"
         placeholder="Search creditors by name"
         value={searchTerm}
+        className="inputfield"
         onChange={handleSearchChange}
       />
       {filteredCreditors.length > 0 ? (
-        <ul>
+        <ol>
           {filteredCreditors.map(creditor => (
-            <li key={creditor.id}>
-              {creditor.name} - {creditor.product} - {creditor.quantity} units @ ₹{creditor.price} each - Total: ₹{creditor.totalAmount}
-              <button onClick={() => handleDelete(creditor.id)}>Delete</button>
+            <li key={creditor.id} className="pd1">
+             ID- {creditor.id} <br /> Name: {creditor.name} - {creditor.product} - {creditor.quantity} units @ ₹{creditor.price} each - Total: ₹{creditor.totalAmount}
+              <button onClick={() => handleDelete(creditor.id)}>Paid</button>
             </li>
           ))}
-        </ul>
+        </ol>
       ) : (
         <p>No creditors found</p>
       )}

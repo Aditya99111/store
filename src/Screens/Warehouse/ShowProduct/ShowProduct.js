@@ -62,23 +62,27 @@ const ShowProducts = () => {
   );
 
   return (
-    <div>
+    <div className="center">
       <h1>All Products</h1>
       <input
         type="text"
         placeholder="Search products by name"
         value={searchTerm}
         onChange={handleSearchChange}
+      className="inputfield"
       />
       {filteredProducts.length > 0 ? (
-        <ul>
+        <ol>
           {filteredProducts.map(product => (
-            <li key={product.id}>
-              {product.name} - {product.quantity} units @ ₹{product.price} each, {product.weight} {product.unit}
-              <button onClick={() => handleEdit(product)}>Edit</button>
+            <li key={product.id} className="pd1">
+
+              {product.name} - {product.quantity} units @ ₹{product.price} each, {product.weight} {product.unit}‎ ‎ ‎ ‎ 
+              <button onClick={() => handleEdit(product)} className="btn">Edit</button>
+             
             </li>
+           
           ))}
-        </ul>
+        </ol>
       ) : (
         <p>No products found</p>
       )}
@@ -89,26 +93,31 @@ const ShowProducts = () => {
             <div>
               <label>Quantity:</label>
               <input
-                type="number"
+              className="inputfield"
+              type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value))}
                 required
               />
             </div>
+            <br />
             <div>
               <label>Price:</label>
               <input
+              className="inputfield"
                 type="number"
                 value={price}
                 onChange={(e) => setPrice(parseFloat(e.target.value))}
                 required
               />
             </div>
+            <br />
             <div>
               <label>Weight:</label>
               <input
                 type="number"
-                value={weight}
+              className="inputfield"
+              value={weight}
                 onChange={(e) => setWeight(parseFloat(e.target.value))}
                 required
               />
@@ -118,9 +127,12 @@ const ShowProducts = () => {
                 ))}
               </select>
             </div>
-            <button type="submit">Update</button>
-            <button type="button" onClick={() => setEditProduct(null)}>Cancel</button>
+            <br />
+            <div className="">
+            <button type="submit" className="btn">Update</button>
+            <button type="button" className="btn" onClick={() => setEditProduct(null)}>Cancel</button></div>
           </form>
+          <br /><br />
         </div>
       )}
     </div>

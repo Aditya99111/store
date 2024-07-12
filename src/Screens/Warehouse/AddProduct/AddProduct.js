@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { db, collection, addDoc, query, where, getDocs, updateDoc, doc, serverTimestamp } from "../../../firebase";
-import "../warehouse.css"
+import "../warehouse.css";
+
 const units = ["kg", "gram", "liter", "milliliter"];
+const paymentModes = ["online", "cash"];
 
 const AddProduct = () => {
   const [productName, setProductName] = useState("");
@@ -10,8 +12,11 @@ const AddProduct = () => {
   const [weight, setWeight] = useState("");
   const [unit, setUnit] = useState(units[0]);
   const [paid, setPaid] = useState(false);
+  const [paymentMode, setPaymentMode] = useState(paymentModes[0]);
   const [creditorName, setCreditorName] = useState("");
   const [existingProducts, setExistingProducts] = useState([]);
+  const [creditors, setCreditors] = useState([]);
+  const [selectedCreditor, setSelectedCreditor] = useState("");
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -22,7 +27,20 @@ const AddProduct = () => {
         setExistingProducts(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       }
     };
+
+    const fetchCreditors = async () => {
+      try {
+        const creditorsRef = collection(db, "creditors");
+        const snapshot = await getDocs(creditorsRef);
+        const creditorsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setCreditors(creditorsData);
+      } catch (error) {
+        console.error("Error fetching creditors:", error);
+      }
+    };
+
     fetchProducts();
+    fetchCreditors();
   }, [productName]);
 
   const handleSubmit = async (e) => {
@@ -39,6 +57,9 @@ const AddProduct = () => {
           console.log(`Updating product ID: ${product.id}`);
           await updateDoc(productRef, {
             quantity: product.quantity + quantity,
+            paid,
+            paymentMode,
+            creditorId: paid ? null : selectedCreditor,
           });
           productUpdated = true;
           break;
@@ -47,21 +68,41 @@ const AddProduct = () => {
 
       if (!productUpdated) {
         console.log("Adding new product");
-        await addDoc(collection(db, "products"), {
+        const productData = {
           name: productName,
           normalized_name: productName.toLowerCase().trim(),
           quantity: quantity,
           price: price,
           weight: weight,
           unit: unit,
+          paid,
+          paymentMode,
+          creditorId: paid ? null : selectedCreditor,
           createdAt: serverTimestamp(),
-        });
+        };
+
+        await addDoc(collection(db, "products"), productData);
       }
 
       if (!paid) {
         console.log("Adding creditor information");
+        let selectedCreditorId = null;
+
+        // Check if a creditor was selected from the dropdown
+        if (selectedCreditor) {
+          selectedCreditorId = selectedCreditor;
+        } else {
+          // Add a new creditor
+          const newCreditorRef = await addDoc(collection(db, "creditors"), {
+            name: creditorName,
+            createdAt: serverTimestamp(),
+          });
+          selectedCreditorId = newCreditorRef.id;
+        }
+
+        // Add creditor data to the product
         await addDoc(collection(db, "creditors"), {
-          name: creditorName,
+          creditorId: selectedCreditorId,
           product: productName,
           quantity: quantity,
           price: price,
@@ -71,13 +112,15 @@ const AddProduct = () => {
       }
 
       setProductName("");
-      setQuantity(0);
-      setPrice(0);
-      setWeight(0);
+      setQuantity("");
+      setPrice("");
+      setWeight("");
       setUnit(units[0]);
       setPaid(false);
+      setPaymentMode(paymentModes[0]);
       setCreditorName("");
       setExistingProducts([]);
+      setSelectedCreditor("");
 
       alert("Product saved successfully!");
     } catch (error) {
@@ -147,39 +190,69 @@ const AddProduct = () => {
           />
           <select className="inputunit" value={unit} onChange={(e) => setUnit(e.target.value)} required>
             {units.map(unit => (
-              <option key={unit} value={unit} >{unit}</option>
+              <option key={unit} value={unit}>{unit}</option>
             ))}
           </select>
         </div>
-          <div className="paidstatus">
+        <div className="paidstatus">
           <label>Paid:</label>
-
-          <span className="paid">
           <input
             type="checkbox"
             checked={paid}
             onChange={(e) => setPaid(e.target.checked)}
             className="paid"
-          /></span></div>
-        {!paid && (
+          />
+        </div>
+        {paid && (
           <div>
-            <label>Creditor Name:</label>
-            <input
-              type="text"
-              value={creditorName}
-              onChange={(e) => setCreditorName(e.target.value)}
-              required
-
-            className="inputfield"
-            placeholder="Enter creditors name"
-              
-            />
+            <p>Payment Mode:</p>
+            <select
+              value={paymentMode}
+              onChange={(e) => setPaymentMode(e.target.value)}
+              className="inputfield"
+            >
+              {paymentModes.map(mode => (
+                <option key={mode} value={mode}>{mode}</option>
+              ))}
+            </select>
           </div>
         )}
-        <button type="submit" className="btn">Save</button>
-      </form>
-    </div>
-  );
-};
-
-export default AddProduct;
+        {!paid && (
+          <div>
+            <label>Creditor:</label>
+            <select
+              value={selectedCreditor}
+              onChange={(e) => setSelectedCreditor(e.target.value)}
+              className="inputfield"
+            >
+              <option value="">Select a creditor</option>
+              {creditors.map(creditor => (
+                <option key={creditor.id} value={creditor.id}>{creditor.name}</option>
+              ))}
+             
+                <option value="newCreditor">Add New Creditor</option>
+                </select>
+                <div> 
+                  {selectedCreditor === "newCreditor" && (
+           <> <label>Enter name:</label>
+            
+                 
+                  <input
+                    type="text"
+                    value={creditorName}
+                    onChange={(e) => setCreditorName(e.target.value)}
+                    required
+                    className="inputfield"
+                    placeholder="Enter creditor name"
+                  /></>
+                )}</div>
+              </div>
+            )}
+            <button type="submit" className="btn">Save</button>
+          </form>
+        </div>
+      );
+    };
+    
+    export default AddProduct;
+    

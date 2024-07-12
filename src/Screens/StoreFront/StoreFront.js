@@ -4,7 +4,6 @@ import MakeBill from './MakeBill'
 const StoreFront = () => {
   return (
     <div>
-      <AddCustomer/>
       <MakeBill/>
     </div>
   )
